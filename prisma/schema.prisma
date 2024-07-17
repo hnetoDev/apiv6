@@ -1,0 +1,102 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+datasource db {
+  provider = "postgresql"
+  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
+
+
+model User{
+   id              String         @id @default(cuid())
+   name            String
+   cpf             String         @unique
+   email           String         @unique
+   password        String
+   tel             String         @unique
+   emerg           String  
+   genero          String?
+   active          Boolean?
+   mensalidade     String
+   planoId         String?          
+   plano           Plano?         @relation(fields: [planoId],references: [id]) 
+   entrada         Entrada[]
+   treinoId        String?
+   treino          Treino?        @relation(fields: [treinoId],references: [id])
+   img             String?
+   
+  
+  
+}
+
+model Plano{
+  id              String         @id @default(cuid())
+  name            String         
+  value           String 
+  duration        String
+  user            User[]
+  qtd             Int?           @default(0)
+  entrada         Entrada[]
+}
+
+
+
+
+model Entrada{
+  id             String          @id @default(cuid())
+  name           String
+  method         Method          
+  date           String?
+  value          String?
+  month          Int?
+  userId         String 
+  User           User            @relation(fields: [userId],references: [id])
+  planoId        String?
+  plano          Plano?         @relation(fields: [planoId],references: [id])
+}
+
+enum Method {
+  pix
+  dinheiro
+  aplicativo
+}
+
+enum TypeOfExercicio {
+  BICEPS
+  PEITO
+  COSTAS
+  TRICEPS
+  OMBRO
+  ANTEBRACO
+  ABDOMEN
+  GLUTEO
+  POSTERIOR
+  QUADRICEPS
+  PANTURRILHA
+  TRAPEZIO
+}
+
+model Exercicio {
+  id             String          @id @default(cuid())
+  name           String          @unique
+  category       TypeOfExercicio
+  desc           String
+  img            String?
+  
+}
+model Treino {
+  id            String          @id @default(cuid())
+  name          String          @unique
+  treinador     String
+  exercicios    String[]
+  user          User[]
+}
+
+
+
+
+
