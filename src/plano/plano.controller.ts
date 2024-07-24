@@ -34,4 +34,10 @@ export class PlanoController {
   remove(@Param('id') id: string) {
     return this.planoService.remove(id);
   }
+
+
+  @Post('testeV')
+  teste(){
+    return this.planoService.teste();
+  }
 }
