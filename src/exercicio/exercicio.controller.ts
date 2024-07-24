@@ -13,7 +13,6 @@ export class ExercicioController {
   @Post()
   @UseInterceptors(FileInterceptor('img',multerOptions))
   create(@Body() createExercicioDto: CreateExercicioDto, @UploadedFile() file: Express.Multer.File) {
-    console.log(file)
     return this.exercicioService.create(createExercicioDto,file)
   }
 
@@ -35,8 +34,9 @@ export class ExercicioController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateExercicioDto: UpdateExercicioDto) {
-    return this.exercicioService.update(id, updateExercicioDto);
+  @UseInterceptors(FileInterceptor('img',multerOptions))
+  update(@Param('id') id: string, @Body() updateExercicioDto: UpdateExercicioDto,@UploadedFile() file: Express.Multer.File) {
+    return this.exercicioService.update(id, updateExercicioDto,file);
   }
 
   @Delete(':id')

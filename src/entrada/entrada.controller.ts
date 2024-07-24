@@ -22,6 +22,11 @@ export class EntradaController {
   findOne(@Param('id') id: string) {
     return this.entradaService.findOne(id);
   }
+
+  @Get('user/:id')
+  entradaFilter(@Param('id') id: string){
+    return this.entradaService.entradaFilter(id)
+  }
   
  
 

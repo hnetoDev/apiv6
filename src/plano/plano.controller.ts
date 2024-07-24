@@ -3,9 +3,10 @@ import { PlanoService } from './plano.service';
 import { CreatePlanoDto } from './dto/create-plano.dto';
 import { UpdatePlanoDto } from './dto/update-plano.dto';
 
+
 @Controller('plano')
 export class PlanoController {
-  constructor(private readonly planoService: PlanoService) {}
+  constructor(private readonly planoService: PlanoService) { }
 
   @Post()
   create(@Body() createPlanoDto: CreatePlanoDto) {
@@ -17,6 +18,7 @@ export class PlanoController {
   findAll() {
     return this.planoService.findAll();
   }
+
 
   @Get(':id')
   findOne(@Param('id') id: string) {

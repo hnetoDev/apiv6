@@ -14,6 +14,7 @@ export class UserController {
   @Post()
   @UseInterceptors(FileInterceptor('img',multerOptions))
   create(@Body() createUserDto: CreateUserDto,@UploadedFile() file: Express.Multer.File) {
+    console.log(createUserDto)
     return this.userService.create(createUserDto,file);
   }
 
@@ -34,8 +35,9 @@ export class UserController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(id, updateUserDto);
+  @UseInterceptors(FileInterceptor('img',multerOptions))
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto,@UploadedFile() file: Express.Multer.File) {
+    return this.userService.update(id, updateUserDto,file);
   }
 
   @Delete(':id')

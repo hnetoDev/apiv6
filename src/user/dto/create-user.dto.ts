@@ -9,4 +9,5 @@ export class CreateUserDto {
   mensalidade: string
   planoId: string
   treinoId: string
+  
 }

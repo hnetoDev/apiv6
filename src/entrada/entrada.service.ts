@@ -26,7 +26,8 @@ export class EntradaService {
             id:createEntradaDto.userId
           },
           data:{
-            active:createEntradaDto.active
+            active:createEntradaDto.active,
+            lastPayment:createEntradaDto.date
           }
         })
         const entrada = prisma.entrada.create({
@@ -51,13 +52,24 @@ export class EntradaService {
     }catch(e){
       console.log(e)
     }
-  
-   
-    
+  }
+
+  entradaFilter(id:string){
+    return this.prismaService.entrada.findMany({
+      where:{
+        User:{
+          id
+        }
+      }
+    })
   }
 
   findAll() {
-    return this.prismaService.entrada.findMany({})
+    return this.prismaService.entrada.findMany({
+      orderBy:{
+        date:"asc"
+      }
+    })
   }
 
   async findMonthly(month: number){
