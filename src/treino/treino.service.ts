@@ -2,15 +2,24 @@ import { Injectable } from '@nestjs/common';
 import { CreateTreinoDto } from './dto/create-treino.dto';
 import { UpdateTreinoDto } from './dto/update-treino.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { JsonArray } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class TreinoService {
-  constructor(private prismaService: PrismaService){}
+  constructor(private prismaService: PrismaService) { }
 
   create(createTreinoDto: CreateTreinoDto) {
+    const t = createTreinoDto.treino.filter(t => t.length > 0) as JsonArray
+    console.log(t)
     return this.prismaService.treino.create({
-      data:createTreinoDto
+      data: {
+        treinador: createTreinoDto.treinador,
+        name:createTreinoDto.name,
+        exercicios:t
+        
+      }
     })
+
   }
 
   findAll() {
@@ -19,32 +28,32 @@ export class TreinoService {
 
   findOne(id: string) {
     return this.prismaService.treino.findUnique({
-      where:{
+      where: {
         id
       }
     })
   }
 
-  search(search: string){
+  search(search: string) {
     return this.prismaService.treino.findMany({
-      where:{
-        name:{contains:search,mode:"insensitive"}
+      where: {
+        name: { contains: search, mode: "insensitive" }
       }
     })
   }
 
   update(id: string, updateTreinoDto: UpdateTreinoDto) {
     return this.prismaService.treino.update({
-      where:{
+      where: {
         id
       },
-      data:updateTreinoDto
+      data: updateTreinoDto
     });
   }
 
   remove(id: string) {
     return this.prismaService.treino.delete({
-      where:{
+      where: {
         id
       }
     });

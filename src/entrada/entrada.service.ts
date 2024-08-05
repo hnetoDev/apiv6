@@ -27,7 +27,7 @@ export class EntradaService {
           },
           data:{
             active:createEntradaDto.active,
-            lastPayment:createEntradaDto.date
+            
           }
         })
         const entrada = prisma.entrada.create({

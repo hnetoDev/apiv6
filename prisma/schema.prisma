@@ -22,7 +22,7 @@ model User{
    genero          String?
    active          Boolean?
    mensalidade     String
-   lastPayment     String?
+   createdAt       String
    planoId         String?          
    plano           Plano?         @relation(fields: [planoId],references: [id]) 
    entrada         Entrada[]
@@ -93,8 +93,9 @@ model Treino {
   id            String          @id @default(cuid())
   name          String          @unique
   treinador     String
-  exercicios    String[]
+  exercicios    Json?
   user          User[]
+ 
 }
 
 

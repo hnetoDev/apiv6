@@ -7,7 +7,6 @@ export class CreateUserDto {
   emerg: string
   genero: string
   mensalidade: string
-  planoId: string
   treinoId: string
-  
+  planoId: string  
 }

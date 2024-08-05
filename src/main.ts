@@ -9,11 +9,12 @@ const valida = new ValidacaoMensalidade(new PrismaService)
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule,{
-    bodyParser:true
+    bodyParser:true,
   });
   
   app.enableCors({
-    allowedHeaders: ['Content-Type']
+    allowedHeaders: ['Content-Type'],
+    origin: ['https://testeauth.vercel.app',"http://localhost:3001"]
   })
   app.use(middleware)
   app.use(bodyParser.urlencoded({extended:true}))
@@ -23,3 +24,5 @@ async function bootstrap() {
   await app.listen(3000);
 }
 bootstrap();
+
+

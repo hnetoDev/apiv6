@@ -30,6 +30,7 @@ export class UserService {
             active: false,
             ...createUserDto,
             img: null,
+            createdAt:createUserDto.mensalidade
 
           }
         })
@@ -43,9 +44,9 @@ export class UserService {
       const user = prisma.user.create({
         data: {
           ...createUserDto,
-          planoId: createUserDto.planoId,
           active: false,
           img: file.filename,
+          createdAt:createUserDto.mensalidade
 
         }
       })
@@ -137,7 +138,9 @@ export class UserService {
             },
             data: {
               ...updateUserDto,
-              img: userPrev.img
+              img: userPrev.img,
+              planoId: updateUserDto.planoId === '' ? userPrev.planoId : updateSeguro.planoId,
+              treinoId: updateUserDto.treinoId === '' ? userPrev.treinoId : updateSeguro.treinoId
             }
           })
         }
@@ -156,7 +159,9 @@ export class UserService {
           },
           data: {
             ...updateUserDto,
-            img: file.filename
+            img: file.filename,
+            planoId: updateUserDto.planoId === '' ? userPrev.planoId : updateSeguro.planoId,
+            treinoId: updateUserDto.treinoId === '' ? userPrev.treinoId : updateSeguro.treinoId
           }
         })
 

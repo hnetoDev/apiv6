@@ -58,8 +58,6 @@ export class PlanoService {
 
     let timeRest = secondsInDay - secondsActually;
     setInterval(async () => {
-      console.log(timeRest)
-
       const user = await this.prismaService.user.findMany({
         where: {
           active: true
@@ -67,27 +65,44 @@ export class PlanoService {
       })
 
       try {
-        if(user){
-          user.map(async (u) =>{
+        if (user) {
+          user.map(async (u) => {
             const plano = await this.prismaService.plano.findUnique({
-              where:{
-                id:u.planoId
+              where: {
+                id: u.planoId
               }
             })
-            const dateUser = new Date(u.mensalidade)
-            dateUser.setDate(dateUser.getDate() + Number(plano.duration))
-            console.log(dateUser,date);
-            if(dateUser === date){
+
+            const dateUser: string | Date = new Date(u.mensalidade)
+            console.log(u.mensalidade)
+
+            dateUser.setDate(dateUser.getDate() + 1 + Number(plano.duration));
+            const dateD = dateUser.getDate() 
+            const dateM = dateUser.getMonth() 
+            const dateY = dateUser.getFullYear() 
+            const dateNowD = new Date().getDate()
+            const dateNowM = new Date().getMonth()
+
+            console.log(dateD,dateM,'------------',dateNowD,dateNowM)
+            console.log(`${dateY}-${dateM}-${dateD}`)
+
+           
+
+
+            if (`${dateD}-${dateM}` === `${dateNowD}-${dateNowM}`) {
+              const dataFormated = `${dateY}-${dateM > 10 ? (dateM + 1) : `0${dateM + 1}`}-${dateD > 10 ? dateD : `0${dateD}`}`
+              console.log(dataFormated)
               const user = await this.prismaService.user.update({
-                where:{
-                  id:u.id
+                where: {
+                  id: u.id
                 },
-                data:{
-                  active:false
+                data: {
+                  active: false,
+                  mensalidade: dataFormated
                 }
               })
             }
-            
+
           })
         }
       } catch (e) {
