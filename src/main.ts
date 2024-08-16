@@ -2,10 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as bodyParser from 'body-parser'
 import { middleware } from './midlleware';
-import { ValidacaoMensalidade } from './validacaoMensalidade';
-import { PrismaService } from './prisma/prisma.service';
-
-const valida = new ValidacaoMensalidade(new PrismaService)
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule,{

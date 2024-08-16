@@ -17,12 +17,12 @@ model User{
    cpf             String         @unique
    email           String         @unique
    password        String
-   tel             String         @unique
-   emerg           String  
-   genero          String?
-   active          Boolean?
-   mensalidade     String
-   createdAt       String
+   tel             String         
+   emerg           String?  
+   genero          String
+   active          Boolean
+   mensalidade     String?
+   createdAt       String?
    planoId         String?          
    plano           Plano?         @relation(fields: [planoId],references: [id]) 
    entrada         Entrada[]

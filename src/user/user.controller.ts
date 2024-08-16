@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, UploadedFile, Res } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import multerOptions from 'src/config/multer.configU';
+import { Response } from 'express';
 
 
 @Controller('user')
@@ -13,9 +14,9 @@ export class UserController {
 
   @Post()
   @UseInterceptors(FileInterceptor('img',multerOptions))
-  create(@Body() createUserDto: CreateUserDto,@UploadedFile() file: Express.Multer.File) {
+  create(@Body() createUserDto: CreateUserDto,@UploadedFile() file: Express.Multer.File, @Res() res: Response) {
     console.log(createUserDto)
-    return this.userService.create(createUserDto,file);
+    return this.userService.create(createUserDto,file,res);
   }
 
   @Get()
@@ -43,5 +44,10 @@ export class UserController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
+  }
+
+  @Post('auth')
+  authMobile(@Body() authBody: {email:string,password:string}){
+    return this.userService.authMobile(authBody)
   }
 }

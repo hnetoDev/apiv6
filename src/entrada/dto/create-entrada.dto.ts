@@ -2,7 +2,7 @@ import { Method } from "@prisma/client"
 
 export class CreateEntradaDto {
   name:string
-  method:Method
+  method:Method | null
   date:string
   userId:string
   month:number

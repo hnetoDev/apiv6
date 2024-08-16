@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as path from 'path';
 import * as fs from 'fs'
+import { Prisma } from '@prisma/client';
+import { Response } from 'express';
 
 @Injectable()
 export class UserService {
@@ -11,57 +13,92 @@ export class UserService {
 
 
 
-  async create(createUserDto: CreateUserDto, file: Express.Multer.File) {
+  async create(createUserDto: CreateUserDto, file: Express.Multer.File, res: Response) {
+    console.log(createUserDto)
+    const cpfIgual = this.prismaService.user.findUnique({
+      where: {
+        cpf: createUserDto.cpf
+      }
+    })
+    const emailIgual = this.prismaService.user.findUnique({
+      where: {
+        email: createUserDto.email
+      }
+    })
+    const result = await Promise.all([cpfIgual, emailIgual])
 
-    const criaSeguro = this.prismaService.$transaction(async (prisma) => {
-
-      const incPlano = prisma.plano.update({
-        where: {
-          id: createUserDto.planoId
-        },
-        data: {
-          qtd: { increment: 1 }
+    if (result[0] || result[1]) {
+      try {
+        if (file) {
+          const fileRecived = path.join(__dirname, '../../public/users/' + file.filename)
+          const fileDelete = fs.unlinkSync(fileRecived)
         }
-      })
-      if (!file) {
-        console.log('n file')
-        const user = prisma.user.create({
-          data: {
-            active: false,
-            ...createUserDto,
-            img: null,
-            createdAt:createUserDto.mensalidade
+      } catch (e) {
+        console.log(e)
+      }
+      return res.status(result[0] && result[1] ? 600 : result[0] ? 601 : result[1] ? 602 : 700).send(`${result[0] && result[1] ? 'CPF e EMAIL já registrados' : result[0] ? 'CPF ja registrado' : result[1] ? 'EMAIL ja registrado' : 'Erro no servidor'}`)
+    }
 
+
+
+
+
+    try {
+      const criaSeguro = await this.prismaService.$transaction(async (prisma) => {
+
+        const incPlano = prisma.plano.update({
+          where: {
+            id: createUserDto.planoId
+          },
+          data: {
+            qtd: { increment: 1 }
           }
         })
 
-        Promise.all([user, incPlano])
-        return user;
 
-      }
-      console.log(createUserDto)
+        const user = prisma.user.create({
+          data: {
+            ...createUserDto,
+            treinoId: createUserDto.treinoId === '' || createUserDto.treinoId === null || createUserDto.treinoId === undefined ? null : createUserDto.treinoId,
+            cpf: createUserDto.cpf,
+            active: false,
+            img: file ? file.filename : null,
+            createdAt: createUserDto.mensalidade ?? null,
+            mensalidade: createUserDto.mensalidade ?? null,
+            planoId: createUserDto.planoId === '' || createUserDto.planoId === null || createUserDto.planoId === undefined ? null : createUserDto.planoId,
+          }
+        })
 
-      const user = prisma.user.create({
-        data: {
-          ...createUserDto,
-          active: false,
-          img: file.filename,
-          createdAt:createUserDto.mensalidade
 
+        if (createUserDto.planoId === '' || createUserDto.planoId === null || createUserDto.planoId === undefined) {
+          console.log('aluno sem plano')
+          return await Promise.resolve(user)
         }
-      })
-
-
-      Promise.all([user, incPlano])
-
-      return user
-    })
+        console.log('aluno com plano')
+        return await Promise.all([user, incPlano]);
 
 
 
 
 
-    return criaSeguro
+      }, { isolationLevel: 'ReadCommitted' })
+      return res.json(criaSeguro[0]).status(201)
+
+
+    } catch (e) {
+      console.log(e)
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        switch (e.code) {
+          case 'P2002':
+          case 'P2034':
+            throw new HttpException('Algum campo já está registrado', HttpStatus.CONFLICT);
+        }
+      }
+      throw new HttpException('Erro desconhecido', HttpStatus.FAILED_DEPENDENCY)
+
+    }
+
+
   }
 
   findAll() {
@@ -90,7 +127,6 @@ export class UserService {
     return this.prismaService.user.findMany({
       where: {
         name: { contains: search, mode: "insensitive" },
-
       }
     })
   }
@@ -111,41 +147,33 @@ export class UserService {
 
         console.log(userPrev.planoId)
         console.log(updateUserDto.planoId)
-        if (updateUserDto.planoId !== userPrev.planoId) {
-          const plano = prisma.plano.update({
-            where: {
-              id: updateUserDto.planoId
-            },
-            data: {
-              qtd: { increment: 1 }
+        if (updateUserDto.planoId !== '' && updateUserDto.planoId !== null && updateUserDto.planoId !== undefined) {
+          if (updateUserDto.planoId !== userPrev.planoId) {
+            const plano = prisma.plano.update({
+              where: {
+                id: updateUserDto.planoId
+              },
+              data: {
+                qtd: { increment: 1 }
+              }
+            })
+            try {
+              const planoPrev = prisma.plano.update({
+                where: {
+                  id: userPrev.planoId
+                },
+                data: {
+                  qtd: { decrement: 1 }
+                }
+              })
+              const planos = await Promise.all([plano, planoPrev])
+            } catch (e) {
+              console.log(e)
             }
-          })
-          const planoPrev = prisma.plano.update({
-            where: {
-              id: userPrev.planoId
-            },
-            data: {
-              qtd: { decrement: 1 }
-            }
-          })
-          const planos = await Promise.all([plano, planoPrev])
-
-        }
-        if (!file) {
-          return prisma.user.update({
-            where: {
-              id
-            },
-            data: {
-              ...updateUserDto,
-              img: userPrev.img,
-              planoId: updateUserDto.planoId === '' ? userPrev.planoId : updateSeguro.planoId,
-              treinoId: updateUserDto.treinoId === '' ? userPrev.treinoId : updateSeguro.treinoId
-            }
-          })
+          }
         }
         try {
-          if (userPrev.img) {
+          if (file && userPrev.img) {
             const pathName = path.join(__dirname, '../../public/users/' + userPrev.img)
             fs.unlinkSync(pathName)
           }
@@ -159,9 +187,9 @@ export class UserService {
           },
           data: {
             ...updateUserDto,
-            img: file.filename,
-            planoId: updateUserDto.planoId === '' ? userPrev.planoId : updateSeguro.planoId,
-            treinoId: updateUserDto.treinoId === '' ? userPrev.treinoId : updateSeguro.treinoId
+            img: file ? file.filename : userPrev.img,
+            planoId: updateUserDto.planoId === null || updateUserDto.planoId === '' || updateUserDto.planoId === undefined ? userPrev.planoId : updateUserDto.planoId,
+            treinoId: updateUserDto.treinoId === null || updateUserDto.treinoId === '' || updateUserDto.treinoId === undefined ? userPrev.treinoId : updateUserDto.treinoId
           }
         })
 
@@ -172,6 +200,7 @@ export class UserService {
 
     } catch (e) {
       console.log(e)
+
     }
 
   }
@@ -192,15 +221,19 @@ export class UserService {
           fs.unlinkSync(pathName)
         }
       } */
-
-      const plano = await prisma.plano.update({
-        where: {
-          id: user.planoId
-        },
-        data: {
-          qtd: { decrement: 1 }
-        }
-      })
+      console.log(user)
+      if (user.planoId) {
+        console.log(user.planoId)
+        console.log('tem plano')
+        const plano = await prisma.plano.update({
+          where: {
+            id: user.planoId
+          },
+          data: {
+            qtd: { decrement: 1 }
+          }
+        })
+      }
 
       return user
     })
@@ -216,6 +249,23 @@ export class UserService {
     return delSeguro
   }
 
+
+
+
+  async authMobile(authBody: { email: string, password: string }) {
+
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        email: authBody.email,
+        password: authBody.password
+      }
+    })
+    if (!user) {
+      throw new HttpException('Credenciais Incorretas', HttpStatus.NO_CONTENT)
+    }
+    return user
+
+  }
 
 
 }

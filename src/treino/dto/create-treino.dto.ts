@@ -1,7 +1,6 @@
-import { Exercicio } from "@prisma/client";
 
 export class CreateTreinoDto {
-  treino:string[][]
+  treino:object[][]
   name:string
   treinador:string
 }

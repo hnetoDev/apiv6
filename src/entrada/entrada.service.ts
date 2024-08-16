@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { CreateEntradaDto } from './dto/create-entrada.dto';
 import { UpdateEntradaDto } from './dto/update-entrada.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -10,10 +10,27 @@ export class EntradaService {
 
   async create(createEntradaDto: CreateEntradaDto) {
 
-
+    const user = await this.prismaService.user.findUnique({
+      where:{
+        id:createEntradaDto.userId
+      }
+    })
+    if(!user.planoId){
+      return new HttpException('Usuario sem plano',609)
+    }
     try{
   
       const payment = await this.prismaService.$transaction(async(prisma)=>{
+        if(!createEntradaDto.method){
+          return await this.prismaService.user.update({
+            where:{
+              id:createEntradaDto.userId
+            },
+            data:{
+              active:false
+            }
+          })
+        }
 
         const plano = await prisma.plano.findUnique({
           where:{
